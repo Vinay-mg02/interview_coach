@@ -13,6 +13,10 @@ DB_PATH = Path(__file__).resolve().parent / "users.db"
 DATABASE_URL = os.environ.get("DATABASE_URL")
 if DATABASE_URL:
     DATABASE_URL = DATABASE_URL.strip()
+    if DATABASE_URL.startswith("DATABASE_URL="):
+        DATABASE_URL = DATABASE_URL.replace("DATABASE_URL=", "", 1).strip()
+    if (DATABASE_URL.startswith('"') and DATABASE_URL.endswith('"')) or (DATABASE_URL.startswith("'") and DATABASE_URL.endswith("'")):
+        DATABASE_URL = DATABASE_URL[1:-1].strip()
 IS_POSTGRES = bool(DATABASE_URL)
 
 if IS_POSTGRES:

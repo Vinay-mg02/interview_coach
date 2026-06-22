@@ -324,16 +324,26 @@
             <div>
               <div class="flex justify-between items-start mb-2">
                 <span class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Session: {{ session.id[:8] }}</span>
-                <span class="text-xs px-2.5 py-1 rounded-full font-bold {% if session.overall_score >= 75 %}bg-emerald-50 text-emerald-600 border border-emerald-100{% elif session.overall_score >= 55 %}bg-amber-50 text-amber-600 border border-amber-100{% else %}bg-red-50 text-red-500 border border-red-100{% endif %}">
+                {% if session.overall_score >= 75 %}
+                <span class="text-xs px-2.5 py-1 rounded-full font-bold bg-emerald-50 text-emerald-600 border border-emerald-100">
                   Score: {{ session.overall_score }}
                 </span>
+                {% elif session.overall_score >= 55 %}
+                <span class="text-xs px-2.5 py-1 rounded-full font-bold bg-amber-50 text-amber-600 border border-amber-100">
+                  Score: {{ session.overall_score }}
+                </span>
+                {% else %}
+                <span class="text-xs px-2.5 py-1 rounded-full font-bold bg-red-50 text-red-500 border border-red-100">
+                  Score: {{ session.overall_score }}
+                </span>
+                {% endif %}
               </div>
               <h4 class="font-extrabold text-slate-800 text-sm mb-1">{{ session.overall_label }}</h4>
               <p class="text-slate-400 text-[10px] font-medium mb-4">Duration: {{ (session.duration_seconds / 60) | int }} mins</p>
             </div>
             
             <div class="flex items-center justify-between border-t border-slate-100 pt-3">
-              <span class="text-[10px] text-slate-400 font-bold" id="time-{{ session.id }}"></span>
+              <span class="text-[10px] text-slate-400 font-bold" id="time-{{session.id}}"></span>
               <a href="/results/{{ session.id }}" class="text-xs font-bold text-indigo-600 hover:text-indigo-900 hover:underline">View Analytics →</a>
             </div>
             
@@ -342,9 +352,9 @@
                 const ts = {{ session.timestamp }};
                 if (ts > 0) {
                   const date = new Date(ts * 1000);
-                  document.getElementById("time-{{ session.id }}").textContent = date.toLocaleDateString(undefined, {month: 'short', day: 'numeric', year: 'numeric'});
+                  document.getElementById("time-{{session.id}}").textContent = date.toLocaleDateString(undefined, {month: 'short', day: 'numeric', year: 'numeric'});
                 } else {
-                  document.getElementById("time-{{ session.id }}").textContent = "N/A";
+                  document.getElementById("time-{{session.id}}").textContent = "N/A";
                 }
               })();
             </script>
