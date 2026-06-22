@@ -11,6 +11,8 @@ load_dotenv(override=True)
 
 DB_PATH = Path(__file__).resolve().parent / "users.db"
 DATABASE_URL = os.environ.get("DATABASE_URL")
+if DATABASE_URL:
+    DATABASE_URL = DATABASE_URL.strip()
 IS_POSTGRES = bool(DATABASE_URL)
 
 if IS_POSTGRES:
