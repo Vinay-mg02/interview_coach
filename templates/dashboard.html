@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Interview Results | AI Mock Interview Platform</title>
+  <meta name="description" content="Detailed post-interview analytics: WPM, technical accuracy, filler words, structural clarity, and improvement recommendations." />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    * { font-family: 'Inter', sans-serif; }
+    body { background: #050816; }
+
+    .bg-mesh {
+      background:
+        radial-gradient(ellipse 60% 40% at 10% 10%, rgba(120,80,255,0.12) 0%, transparent 60%),
+        radial-gradient(ellipse 50% 40% at 90% 80%, rgba(0,200,180,0.1) 0%, transparent 60%),
+        #050816;
+    }
+
+    .glass {
+      background: rgba(22, 28, 45, 0.45);
+      border-top: 1px solid rgba(255, 255, 255, 0.12);
+      border-left: 1px solid rgba(255, 255, 255, 0.08);
+      border-right: 1px solid rgba(0, 0, 0, 0.25);
+      border-bottom: 2px solid rgba(0, 0, 0, 0.4);
+      border-radius: 24px;
+      box-shadow: 
+        0 25px 50px -12px rgba(0, 0, 0, 0.65),
+        inset 0 1px 0 rgba(255, 255, 255, 0.05),
+        inset 0 -8px 16px rgba(0, 0, 0, 0.35);
+      backdrop-filter: blur(25px);
+      -webkit-backdrop-filter: blur(25px);
+    }
+
+    /* Score arc */
+    .score-ring { transform: rotate(-90deg); }
+    .score-track { transition: stroke-dashoffset 2s cubic-bezier(0.34,1.56,0.64,1); }
+
+    /* Metric bar */
+    .metric-bar-fill {
+      height: 100%;
+      border-radius: 999px;
+      transition: width 1.5s cubic-bezier(0.34,1.56,0.64,1);
+    }
+
+    /* Fade in up */
+    @keyframes fadeUp { from{opacity:0;transform:translateY(30px)} to{opacity:1;transform:none} }
+    .fade-up { opacity:0; animation: fadeUp 0.7s ease forwards; }
+
+    /* Number count-up */
+    .count-up { transition: all 0.3s ease; }
+
+    /* Card hover with 3D animation */
+    .metric-card {
+      transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+      cursor: default;
+    }
+    .metric-card:hover {
+      transform: translateY(-6px);
+      box-shadow: 
+        0 30px 60px rgba(0, 0, 0, 0.75),
+        0 0 30px rgba(124, 58, 237, 0.15);
+    }
+
+    /* Transcript accordion */
+    .turn-body { max-height: 0; overflow: hidden; transition: max-height 0.4s ease; }
+    .turn-body.open { max-height: 600px; }
+
+    /* Star rating */
+    .star { transition: color 0.3s ease; }
+
+    /* Badge pulse */
+    @keyframes pulse-soft { 0%,100%{opacity:1} 50%{opacity:0.5} }
+    .pulse { animation: pulse-soft 2s ease infinite; }
+
+    /* Gradient text */
+    .grad-text { background: linear-gradient(135deg,#7c3aed,#06b6d4,#10b981); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+
+    /* Glow */
+    .glow-violet { box-shadow: 0 0 30px rgba(124,58,237,0.3); }
+    .glow-cyan { box-shadow: 0 0 30px rgba(6,182,212,0.3); }
+    .glow-emerald { box-shadow: 0 0 30px rgba(16,185,129,0.3); }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-thumb { background: rgba(124,58,237,0.4); border-radius: 5px; }
+
+    /* Shine */
+    .shine::before {
+      content:''; position:absolute; inset:0;
+      background:linear-gradient(135deg,transparent 40%,rgba(255,255,255,0.03) 50%,transparent 60%);
+      border-radius:inherit; pointer-events:none;
+    }
+
+    /* WPM gauge */
+    .wpm-needle { transform-origin: 50% 100%; transition: transform 2s cubic-bezier(0.34,1.56,0.64,1); }
+  </style>
+</head>
+<body class="bg-mesh min-h-screen text-white">
+
+  <!-- Header -->
+  <header class="glass border-b border-white/10 px-8 py-4 flex items-center justify-between sticky top-0 z-50">
+    <div class="flex items-center gap-3">
+      <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-violet-600 to-cyan-500 flex items-center justify-center text-lg font-bold">AI</div>
+      <div>
+        <span class="font-semibold text-white">InterviewCoach</span>
+        <span class="text-xs text-slate-500 ml-2">· Session Report</span>
+      </div>
+    </div>
+    <div class="flex items-center gap-3">
+      <span id="report-status" class="text-xs px-3 py-1 rounded-full bg-violet-500/20 text-violet-400 border border-violet-500/20 pulse">⏳ Loading results…</span>
+      <a href="/" class="glass px-4 py-2 rounded-xl text-sm text-slate-300 hover:text-white hover:border-white/30 transition-all border border-white/10">
+        ← New Interview
+      </a>
+    </div>
+  </header>
+
+  <!-- Loading State -->
+  <div id="loading-state" class="flex flex-col items-center justify-center min-h-96 gap-6">
+    <div class="relative">
+      <div class="w-20 h-20 rounded-full border-4 border-violet-500/30 border-t-violet-500 animate-spin"></div>
+      <div class="absolute inset-3 rounded-full border-4 border-cyan-500/20 border-b-cyan-500 animate-spin" style="animation-direction:reverse;animation-duration:1.5s"></div>
+    </div>
+    <p class="text-slate-400 text-lg">Compiling your interview analytics…</p>
+    <p class="text-slate-600 text-sm">This takes just a moment</p>
+  </div>
+
+  <!-- Main Dashboard (hidden until data loads) -->
+  <main id="dashboard" class="hidden container mx-auto px-4 py-10 max-w-7xl space-y-8">
+
+    <!-- ── Hero Score Banner ── -->
+    <div class="glass rounded-3xl p-8 md:p-10 relative shine overflow-hidden fade-up" style="animation-delay:0.05s">
+      <div class="absolute inset-0 bg-gradient-to-r from-violet-900/20 via-transparent to-cyan-900/20 pointer-events-none"></div>
+      <div class="relative flex flex-col md:flex-row items-center gap-8">
+
+        <!-- Score Ring -->
+        <div class="flex-shrink-0 relative">
+          <svg class="score-ring" width="160" height="160" viewBox="0 0 160 160">
+            <circle cx="80" cy="80" r="68" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="10"/>
+            <circle id="score-ring-fill" cx="80" cy="80" r="68" fill="none"
+              stroke="url(#scoreGrad)" stroke-width="10"
+              stroke-dasharray="427.3" stroke-dashoffset="427.3"
+              stroke-linecap="round" class="score-track"/>
+            <defs>
+              <linearGradient id="scoreGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#7c3aed"/>
+                <stop offset="50%" stop-color="#06b6d4"/>
+                <stop offset="100%" stop-color="#10b981"/>
+              </linearGradient>
+            </defs>
+          </svg>
+          <div class="absolute inset-0 flex flex-col items-center justify-center">
+            <span id="overall-score-text" class="text-4xl font-extrabold grad-text font-mono">--</span>
+            <span class="text-xs text-slate-500 mt-1">/ 100</span>
+          </div>
+        </div>
+
+        <!-- Summary -->
+        <div class="flex-1 text-center md:text-left">
+          <div class="text-sm text-slate-400 mb-2 font-medium">Overall Performance</div>
+          <h1 id="overall-label" class="text-3xl md:text-4xl font-extrabold mb-3 grad-text">Loading…</h1>
+          <p class="text-slate-400 text-base leading-relaxed max-w-xl" id="summary-text"></p>
+
+          <div class="flex flex-wrap gap-3 mt-5 justify-center md:justify-start">
+            <div class="glass rounded-xl px-4 py-2 border border-white/10 text-center">
+              <p class="text-xs text-slate-500">Total Words</p>
+              <p id="stat-total-words" class="text-xl font-bold text-white font-mono">--</p>
+            </div>
+            <div class="glass rounded-xl px-4 py-2 border border-white/10 text-center">
+              <p class="text-xs text-slate-500">Speaking Rate</p>
+              <p id="stat-wpm" class="text-xl font-bold text-cyan-400 font-mono">-- WPM</p>
+            </div>
+            <div class="glass rounded-xl px-4 py-2 border border-white/10 text-center">
+              <p class="text-xs text-slate-500">Q&A Turns</p>
+              <p id="stat-turns" class="text-xl font-bold text-violet-400 font-mono">--</p>
+            </div>
+            <div class="glass rounded-xl px-4 py-2 border border-white/10 text-center">
+              <p class="text-xs text-slate-500">Filler Words</p>
+              <p id="stat-fillers" class="text-xl font-bold text-amber-400 font-mono">--</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Metric Grid ── -->
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+
+      <!-- WPM Card -->
+      <div class="metric-card glass rounded-2xl p-6 relative shine glow-cyan fade-up" style="animation-delay:0.1s">
+        <div class="flex items-start justify-between mb-5">
+          <div>
+            <p class="text-xs text-slate-500 uppercase tracking-wider mb-1">Speaking Speed</p>
+            <h2 class="text-2xl font-bold text-white">Words Per Minute</h2>
+          </div>
+          <div class="text-3xl">⚡</div>
+        </div>
+        <div class="flex items-end gap-3 mb-4">
+          <span id="wpm-number" class="text-5xl font-extrabold font-mono text-cyan-400">--</span>
+          <span class="text-slate-400 mb-2">WPM</span>
+        </div>
+        <div id="wpm-label-badge" class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold mb-4"></div>
+        <div class="relative h-2 rounded-full bg-white/10 overflow-hidden">
+          <div id="wpm-bar" class="metric-bar-fill bg-gradient-to-r from-cyan-500 to-blue-500" style="width:0%"></div>
+        </div>
+        <div class="flex justify-between text-xs text-slate-600 mt-1">
+          <span>Slow (60)</span><span>Optimal (130)</span><span>Fast (200+)</span>
+        </div>
+      </div>
+
+      <!-- Filler Words Card -->
+      <div class="metric-card glass rounded-2xl p-6 relative shine fade-up" style="animation-delay:0.2s">
+        <div class="flex items-start justify-between mb-5">
+          <div>
+            <p class="text-xs text-slate-500 uppercase tracking-wider mb-1">Language Quality</p>
+            <h2 class="text-2xl font-bold text-white">Filler Words</h2>
+          </div>
+          <div class="text-3xl">💬</div>
+        </div>
+        <div class="flex items-end gap-2 mb-3">
+          <span id="filler-count-text" class="text-5xl font-extrabold font-mono text-amber-400">--</span>
+          <div class="mb-2">
+            <span id="filler-pct-text" class="text-sm text-slate-400 block">--%</span>
+            <span class="text-xs text-slate-500">of words</span>
+          </div>
+        </div>
+        <!-- Breakdown -->
+        <div id="filler-breakdown" class="space-y-2 mt-4"></div>
+      </div>
+
+      <!-- Technical Accuracy Card -->
+      <div class="metric-card glass rounded-2xl p-6 relative shine glow-violet fade-up" style="animation-delay:0.3s">
+        <div class="flex items-start justify-between mb-5">
+          <div>
+            <p class="text-xs text-slate-500 uppercase tracking-wider mb-1">Knowledge Assessment</p>
+            <h2 class="text-2xl font-bold text-white">Technical Accuracy</h2>
+          </div>
+          <div class="text-3xl">🔬</div>
+        </div>
+        <div class="relative flex items-center justify-center my-4">
+          <svg width="120" height="60" viewBox="0 0 120 60">
+            <path d="M10,55 A50,50 0 0,1 110,55" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="8" stroke-linecap="round"/>
+            <path id="tech-arc" d="M10,55 A50,50 0 0,1 110,55" fill="none" stroke="url(#techGrad)" stroke-width="8"
+              stroke-linecap="round" stroke-dasharray="157" stroke-dashoffset="157" style="transition:stroke-dashoffset 1.8s cubic-bezier(0.34,1.56,0.64,1)"/>
+            <defs>
+              <linearGradient id="techGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stop-color="#7c3aed"/>
+                <stop offset="100%" stop-color="#a78bfa"/>
+              </linearGradient>
+            </defs>
+          </svg>
+          <div class="absolute bottom-2 text-center">
+            <span id="tech-score-text" class="text-2xl font-bold text-violet-400 font-mono">--</span>
+            <span class="text-xs text-slate-500 block">/ 100</span>
+          </div>
+        </div>
+        <div class="h-1.5 rounded-full bg-white/10 overflow-hidden">
+          <div id="tech-bar" class="metric-bar-fill bg-gradient-to-r from-violet-500 to-purple-400" style="width:0%"></div>
+        </div>
+        <p class="text-xs text-slate-500 mt-2">Based on keyword overlap with your resume</p>
+      </div>
+
+      <!-- Structural Clarity Card -->
+      <div class="metric-card glass rounded-2xl p-6 relative shine glow-emerald fade-up" style="animation-delay:0.4s">
+        <div class="flex items-start justify-between mb-5">
+          <div>
+            <p class="text-xs text-slate-500 uppercase tracking-wider mb-1">Communication</p>
+            <h2 class="text-2xl font-bold text-white">Structural Clarity</h2>
+          </div>
+          <div class="text-3xl">📐</div>
+        </div>
+        <div class="flex items-center gap-3 mb-4">
+          <span id="clarity-score-text" class="text-5xl font-extrabold font-mono text-emerald-400">--</span>
+          <span class="text-slate-400 self-end mb-2">/ 100</span>
+        </div>
+        <!-- Star rating -->
+        <div id="star-rating" class="flex gap-1 mb-4 text-2xl"></div>
+        <div class="h-1.5 rounded-full bg-white/10 overflow-hidden">
+          <div id="clarity-bar" class="metric-bar-fill bg-gradient-to-r from-emerald-500 to-teal-400" style="width:0%"></div>
+        </div>
+        <p class="text-xs text-slate-500 mt-2">Sentence structure, connectors & depth</p>
+      </div>
+
+      <!-- Area of Improvement Card -->
+      <div class="metric-card glass rounded-2xl p-6 relative shine col-span-1 md:col-span-2 xl:col-span-2 fade-up" style="animation-delay:0.5s;border-color:rgba(245,158,11,0.2);box-shadow:0 0 30px rgba(245,158,11,0.08)">
+        <div class="flex items-start justify-between mb-5">
+          <div>
+            <p class="text-xs text-slate-500 uppercase tracking-wider mb-1">Coaching Insight</p>
+            <h2 class="text-2xl font-bold text-white">Primary Area of Improvement</h2>
+          </div>
+          <div class="text-3xl">🏆</div>
+        </div>
+        <div class="flex items-center gap-3 mb-5">
+          <div class="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-xl">⚡</div>
+          <span id="improvement-area" class="text-xl font-bold text-amber-400">Loading…</span>
+        </div>
+        <div id="improvement-tips" class="space-y-3"></div>
+      </div>
+
+    </div>
+
+    <!-- ── Full Transcript ── -->
+    <div class="glass rounded-2xl p-6 fade-up" style="animation-delay:0.6s">
+      <div class="flex items-center justify-between mb-6">
+        <div>
+          <p class="text-xs text-slate-500 uppercase tracking-wider mb-1">Complete Record</p>
+          <h2 class="text-2xl font-bold text-white">Interview Transcript</h2>
+        </div>
+        <button onclick="toggleAllTranscript()" class="glass px-4 py-2 rounded-xl text-xs text-slate-400 hover:text-white border border-white/10 hover:border-white/30 transition-all">
+          Expand All
+        </button>
+      </div>
+      <div id="transcript-list" class="space-y-3">
+        <!-- Injected by JS -->
+      </div>
+    </div>
+
+    <!-- ── Footer CTA ── -->
+    <div class="text-center pb-10 fade-up" style="animation-delay:0.7s">
+      <a href="/"
+        class="inline-flex items-center gap-3 px-8 py-4 rounded-2xl font-bold text-lg text-white"
+        style="background:linear-gradient(135deg,#7c3aed,#06b6d4);box-shadow:0 0 30px rgba(124,58,237,0.4);">
+        🎙️ Start Another Interview
+      </a>
+      <p class="text-slate-600 text-sm mt-4">Practice makes perfect. Each session builds on the last.</p>
+    </div>
+
+  </main>
+
+  <!-- ===================== JAVASCRIPT ===================== -->
+  <script>
+    const SESSION_ID = "{{ session_id }}";
+
+    async function loadResults() {
+      let attempts = 0;
+      const maxAttempts = 20;
+
+      async function tryFetch() {
+        attempts++;
+        try {
+          const res = await fetch(`/api/results/${SESSION_ID}`);
+          if (res.status === 202) {
+            // Not ready yet
+            if (attempts < maxAttempts) {
+              setTimeout(tryFetch, 2000);
+            } else {
+              document.getElementById('report-status').textContent = '❌ Report timeout';
+            }
+            return;
+          }
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          const data = await res.json();
+          renderDashboard(data);
+        } catch (e) {
+          console.error('Error loading results:', e);
+          if (attempts < maxAttempts) setTimeout(tryFetch, 3000);
+        }
+      }
+      tryFetch();
+    }
+
+    function renderDashboard(d) {
+      document.getElementById('loading-state').classList.add('hidden');
+      document.getElementById('dashboard').classList.remove('hidden');
+      document.getElementById('report-status').textContent = '✅ Report Ready';
+      document.getElementById('report-status').classList.remove('pulse');
+      document.getElementById('report-status').style.background = 'rgba(16,185,129,0.15)';
+      document.getElementById('report-status').style.color = '#34d399';
+
+      // ── Overall Score ──
+      const score = d.overall_score || 0;
+      document.getElementById('overall-score-text').textContent = score;
+      document.getElementById('overall-label').textContent = d.overall_label || 'Analysed';
+      document.getElementById('summary-text').textContent =
+        `Your interview showed ${score >= 75 ? 'strong' : score >= 55 ? 'moderate' : 'developing'} technical communication skills. ` +
+        `You spoke ${d.total_words} words across ${countCandidateTurns(d.turns)} responses. ` +
+        `Focus on ${d.area_of_improvement} to elevate your performance.`;
+
+      // Animate ring
+      const circumference = 427.3;
+      setTimeout(() => {
+        document.getElementById('score-ring-fill').style.strokeDashoffset =
+          circumference - (score / 100) * circumference;
+      }, 300);
+
+      // Stats strip
+      document.getElementById('stat-total-words').textContent = d.total_words;
+      document.getElementById('stat-wpm').textContent = `${d.wpm} WPM`;
+      document.getElementById('stat-turns').textContent = countCandidateTurns(d.turns);
+      document.getElementById('stat-fillers').textContent = d.filler_count;
+
+      // ── WPM ──
+      document.getElementById('wpm-number').textContent = d.wpm;
+      const wpmLabel = document.getElementById('wpm-label-badge');
+      const wpmColors = {
+        'Slow': 'bg-blue-500/20 text-blue-400 border border-blue-500/30',
+        'Optimal ✅': 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30',
+        'Fast': 'bg-orange-500/20 text-orange-400 border border-orange-500/30',
+      };
+      wpmLabel.className = `inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold mb-4 ${wpmColors[d.wpm_label] || ''}`;
+      wpmLabel.textContent = d.wpm_label;
+      setTimeout(() => {
+        document.getElementById('wpm-bar').style.width = `${Math.min((d.wpm / 200) * 100, 100)}%`;
+      }, 400);
+
+      // ── Fillers ──
+      document.getElementById('filler-count-text').textContent = d.filler_count;
+      document.getElementById('filler-pct-text').textContent = `${d.filler_density_pct}%`;
+      const breakdown = document.getElementById('filler-breakdown');
+      breakdown.innerHTML = '';
+      const fillerEntries = Object.entries(d.filler_breakdown || {}).sort((a,b) => b[1]-a[1]);
+      fillerEntries.forEach(([word, count]) => {
+        const max = fillerEntries[0]?.[1] || 1;
+        const pct = Math.round((count / max) * 100);
+        breakdown.innerHTML += `
+          <div>
+            <div class="flex justify-between text-xs mb-1">
+              <span class="text-slate-300 font-mono">"${word}"</span>
+              <span class="text-amber-400">${count}×</span>
+            </div>
+            <div class="h-1.5 rounded-full bg-white/10 overflow-hidden">
+              <div class="h-full rounded-full bg-gradient-to-r from-amber-500 to-orange-400 transition-all duration-1000" style="width:0%" data-target="${pct}"></div>
+            </div>
+          </div>`;
+      });
+      if (fillerEntries.length === 0) {
+        breakdown.innerHTML = '<p class="text-emerald-400 text-sm font-medium">🎉 No significant filler words detected!</p>';
+      }
+      setTimeout(() => {
+        breakdown.querySelectorAll('[data-target]').forEach(el => {
+          el.style.width = el.dataset.target + '%';
+        });
+      }, 600);
+
+      // ── Technical Accuracy ──
+      const techScore = d.technical_accuracy_score || 0;
+      document.getElementById('tech-score-text').textContent = techScore;
+      setTimeout(() => {
+        document.getElementById('tech-arc').style.strokeDashoffset = 157 - (techScore / 100) * 157;
+        document.getElementById('tech-bar').style.width = `${techScore}%`;
+      }, 500);
+
+      // ── Structural Clarity ──
+      const clarityScore = d.structural_clarity_score || 0;
+      document.getElementById('clarity-score-text').textContent = clarityScore;
+      renderStars(clarityScore);
+      setTimeout(() => {
+        document.getElementById('clarity-bar').style.width = `${clarityScore}%`;
+      }, 600);
+
+      // ── Improvement ──
+      document.getElementById('improvement-area').textContent = d.area_of_improvement;
+      const tipsEl = document.getElementById('improvement-tips');
+      tipsEl.innerHTML = '';
+      (d.improvement_tips || []).forEach((tip, i) => {
+        tipsEl.innerHTML += `
+          <div class="flex gap-3 glass rounded-xl px-4 py-3 border border-amber-500/10 fade-up" style="animation-delay:${0.6 + i*0.1}s">
+            <span class="text-amber-400 mt-0.5 flex-shrink-0 font-bold">${i+1}.</span>
+            <p class="text-slate-300 text-sm leading-relaxed">${tip}</p>
+          </div>`;
+      });
+
+      // ── Transcript ──
+      const transcriptList = document.getElementById('transcript-list');
+      transcriptList.innerHTML = '';
+      let qNum = 0;
+      (d.turns || []).forEach((turn, idx) => {
+        if (turn.role === 'interviewer') qNum++;
+        const isAI = turn.role === 'interviewer';
+        const preview = turn.text.substring(0, 80) + (turn.text.length > 80 ? '…' : '');
+        transcriptList.innerHTML += `
+          <div class="glass rounded-xl border border-white/5 overflow-hidden">
+            <button class="w-full flex items-center gap-4 px-5 py-4 text-left hover:bg-white/5 transition-all"
+              onclick="toggleTurn(${idx})">
+              <div class="flex-shrink-0 w-8 h-8 rounded-lg ${isAI ? 'bg-violet-600' : 'bg-cyan-700'} flex items-center justify-center text-xs font-bold">
+                ${isAI ? 'AI' : 'You'}
+              </div>
+              <div class="flex-1 min-w-0">
+                <p class="text-xs text-slate-500 mb-0.5">${isAI ? `Question ${qNum}` : 'Your Response'}</p>
+                <p class="text-sm text-slate-300 truncate">${escapeHtml(preview)}</p>
+              </div>
+              <span id="chevron-${idx}" class="text-slate-600 transition-transform">▼</span>
+            </button>
+            <div id="turn-body-${idx}" class="turn-body px-5 pb-0">
+              <div class="border-t border-white/5 pt-4 pb-5">
+                <p class="text-sm text-slate-200 leading-relaxed">${escapeHtml(turn.text).replace(/\n/g,'<br>')}</p>
+              </div>
+            </div>
+          </div>`;
+      });
+    }
+
+    function toggleTurn(idx) {
+      const body = document.getElementById(`turn-body-${idx}`);
+      const chevron = document.getElementById(`chevron-${idx}`);
+      body.classList.toggle('open');
+      chevron.style.transform = body.classList.contains('open') ? 'rotate(180deg)' : '';
+    }
+
+    function toggleAllTranscript() {
+      const bodies = document.querySelectorAll('.turn-body');
+      const anyOpen = [...bodies].some(b => b.classList.contains('open'));
+      bodies.forEach((b, i) => {
+        if (anyOpen) {
+          b.classList.remove('open');
+          const c = document.getElementById(`chevron-${i}`);
+          if (c) c.style.transform = '';
+        } else {
+          b.classList.add('open');
+          const c = document.getElementById(`chevron-${i}`);
+          if (c) c.style.transform = 'rotate(180deg)';
+        }
+      });
+    }
+
+    function renderStars(score) {
+      const stars = Math.round((score / 100) * 5);
+      const el = document.getElementById('star-rating');
+      el.innerHTML = '';
+      for (let i = 1; i <= 5; i++) {
+        el.innerHTML += `<span class="star text-2xl" style="color:${i<=stars?'#f59e0b':'rgba(255,255,255,0.15)'}">${i<=stars?'★':'☆'}</span>`;
+      }
+    }
+
+    function countCandidateTurns(turns) {
+      return (turns || []).filter(t => t.role === 'candidate').length;
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+
+    // Boot
+    loadResults();
+  </script>
+</body>
+</html>

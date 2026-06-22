@@ -1,0 +1,943 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>InterviewBot | Configure Your Session</title>
+  <meta name="description" content="AI-powered mock interview platform. Upload your resume, set your timer, and get interviewed by an intelligent AI panel." />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    * { font-family: 'Inter', sans-serif; }
+    body { background: #f8fafc; color: #1e293b; overflow-x: hidden; }
+
+    /* Animated light mesh background */
+    .bg-mesh {
+      background:
+        radial-gradient(circle at 10% 20%, rgba(99, 102, 241, 0.05) 0%, transparent 40%),
+        radial-gradient(circle at 90% 80%, rgba(6, 182, 212, 0.04) 0%, transparent 40%),
+        #f8fafc;
+    }
+
+    /* Soft shadow 3D Cards */
+    .glass {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      box-shadow: 
+        0 10px 30px -10px rgba(0, 0, 0, 0.04),
+        0 1px 1px rgba(0, 0, 0, 0.02);
+    }
+
+    /* Drop zone */
+    .drop-zone {
+      background: #ffffff;
+      border: 2px dashed #cbd5e1;
+      transition: all 0.25s ease;
+      cursor: pointer;
+    }
+    .drop-zone:hover, .drop-zone.drag-over {
+      border-color: #6366f1;
+      background: rgba(99, 102, 241, 0.02);
+    }
+    .drop-zone.file-loaded {
+      border-color: #10b981;
+      background: rgba(16, 185, 129, 0.02);
+    }
+
+    /* Timer pills */
+    .timer-pill {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      transition: all 0.2s ease;
+      cursor: pointer;
+    }
+    .timer-pill:hover {
+      border-color: #6366f1;
+      background: rgba(99, 102, 241, 0.02);
+    }
+    .timer-pill.active {
+      background: #eef2ff;
+      border: 2px solid #4f46e5;
+      box-shadow: 0 4px 12px rgba(79, 70, 229, 0.1);
+    }
+
+    /* Waveform voice indicator */
+    .wave-bar {
+      display: inline-block;
+      width: 4px;
+      border-radius: 4px;
+      background: linear-gradient(180deg, #6366f1, #4f46e5);
+      animation: wave 1.2s ease-in-out infinite;
+    }
+    @keyframes wave {
+      0%, 100% { transform: scaleY(0.3); opacity: 0.4; }
+      50% { transform: scaleY(1); opacity: 1; }
+    }
+
+    /* Transcript scrollable */
+    .transcript-box { scrollbar-width: thin; scrollbar-color: rgba(99,102,241,0.2) transparent; }
+    .transcript-box::-webkit-scrollbar { width: 4px; }
+    .transcript-box::-webkit-scrollbar-thumb { background: rgba(99,102,241,0.2); border-radius: 4px; }
+
+    /* Particles */
+    .particle {
+      position: fixed;
+      border-radius: 50%;
+      pointer-events: none;
+      animation: float-up linear infinite;
+    }
+    @keyframes float-up {
+      0% { transform: translateY(100vh) scale(0); opacity: 0; }
+      10% { opacity: 0.2; }
+      90% { opacity: 0.05; }
+      100% { transform: translateY(-20vh) scale(1); opacity: 0; }
+    }
+
+    /* Fade in */
+    @keyframes fadeIn { from { opacity:0; transform:translateY(15px); } to { opacity:1; transform:none; } }
+    .fade-in { animation: fadeIn 0.5s ease forwards; }
+
+    /* Badge pulse */
+    @keyframes badge-pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+    .badge-pulse { animation: badge-pulse 2s ease infinite; }
+
+    /* Progress bar */
+    .progress-fill { transition: width 1s linear; }
+
+    /* Shine effect on cards */
+    .card-shine::before {
+      content:'';
+      position:absolute;
+      inset:0;
+      background: linear-gradient(135deg, transparent 40%, rgba(255,255,255,0.03) 50%, transparent 60%);
+      border-radius: inherit;
+      pointer-events:none;
+    }
+
+    /* Countdown ring */
+    .ring-svg { transform: rotate(-90deg); }
+    .ring-progress { transition: stroke-dashoffset 1s linear; }
+
+    /* Custom scrollbar for entire page */
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: #f1f5f9; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+  </style>
+</head>
+<body class="bg-mesh min-h-screen text-slate-800">
+
+  <!-- Particles -->
+  <div id="particles" class="fixed inset-0 pointer-events-none z-0"></div>
+
+  <!-- ===================== LANDING PAGE ===================== -->
+  <div id="landing-page" class="relative z-10">
+
+    <!-- Header -->
+    <header class="flex items-center justify-between px-8 py-5">
+      <div class="flex items-center gap-3">
+        <div class="w-11 h-11 rounded-2xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-2xl shadow-sm">🤖</div>
+        <div>
+          <h1 class="text-lg font-extrabold text-slate-800 tracking-tight leading-none">InterviewBot</h1>
+          <span class="text-xs text-slate-400 font-medium">AI Interviewer</span>
+        </div>
+      </div>
+      
+      <!-- User info and logout -->
+      {% if user %}
+      <div class="flex items-center gap-4 bg-white border border-slate-200/80 px-4 py-2 rounded-2xl shadow-sm">
+        <div class="flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-emerald-500 badge-pulse"></span>
+          <span class="text-xs font-bold text-slate-700">@{{ user.username }}</span>
+        </div>
+        <div class="w-[1px] h-4 bg-slate-200"></div>
+        <a href="/logout" class="text-xs font-bold text-slate-400 hover:text-red-500 transition-colors">Logout</a>
+      </div>
+      {% endif %}
+    </header>
+
+    <main class="container mx-auto px-4 py-6 max-w-6xl">
+
+      <!-- Hero Banner Section -->
+      <div class="bg-gradient-to-r from-indigo-50/70 via-blue-50/50 to-indigo-100/30 border border-indigo-100/40 rounded-[28px] p-8 md:p-12 mb-8 relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-8 fade-in">
+        
+        <!-- Hero Left Column -->
+        <div class="flex-1 space-y-5">
+          <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-100/70 border border-indigo-200/50 text-[11px] font-semibold text-indigo-600 uppercase tracking-wider">
+            ✦ AI-Powered Mock Interviews
+          </div>
+          <h2 class="text-3xl md:text-4xl lg:text-5xl font-extrabold text-slate-800 tracking-tight leading-[1.15]">
+            Ace Your Next <br />
+            <span class="text-indigo-600">Technical</span> Interview
+          </h2>
+          <p class="text-slate-500 text-sm md:text-base leading-relaxed max-w-md">
+            Upload your resume, set your session timer, and face a smart AI interviewer that helps you improve with real insights.
+          </p>
+        </div>
+
+        <!-- Hero Right Column (Illustration + Speech Bubble) -->
+        <div class="flex-1 flex items-center justify-center relative min-h-[220px] md:min-h-[260px] w-full max-w-[440px]">
+          <img src="/static/robot_interviewer_hero.png" class="w-full max-w-[360px] object-contain h-auto drop-shadow-2xl" alt="AI Robot Interviewer" />
+          
+          <!-- Speech Bubble -->
+          <div class="absolute top-[10%] right-[2%] bg-white text-slate-800 text-xs md:text-sm font-bold px-4 py-2.5 rounded-2xl rounded-bl-none shadow-lg border border-slate-100 flex items-center justify-center">
+            Let's start your interview!
+          </div>
+        </div>
+      </div>
+
+      <!-- Grid Cards Panel -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 fade-in" style="animation-delay:0.1s">
+
+        <!-- CARD 1: Upload Resume -->
+        <div class="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-sm flex flex-col justify-between">
+          <div>
+            <h3 class="font-bold text-slate-800 text-base mb-4">Upload Your Resume</h3>
+            <div
+              id="drop-zone"
+              class="drop-zone rounded-xl p-6 text-center flex flex-col items-center justify-center min-h-[190px]"
+              onclick="document.getElementById('resume-input').click()"
+            >
+              <input type="file" id="resume-input" accept=".pdf" class="hidden" onchange="handleFileSelect(this)" />
+              <div id="drop-content" class="flex flex-col items-center">
+                <div class="w-14 h-14 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-500 mb-3 shadow-inner">
+                  <!-- cloud upload icon -->
+                  <svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                  </svg>
+                </div>
+                <p class="text-slate-800 font-bold text-xs mb-1">Drag & drop your PDF resume</p>
+                <span class="text-indigo-600 font-semibold text-xs hover:underline">or click to browse</span>
+              </div>
+              <div id="file-info" class="hidden flex flex-col items-center">
+                <div class="w-14 h-14 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-500 mb-3 shadow-inner">
+                  <!-- checkmark icon -->
+                  <svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <p id="file-name" class="text-emerald-600 font-semibold text-xs mb-0.5 truncate max-w-[200px]"></p>
+                <p id="file-size" class="text-slate-400 text-[10px]"></p>
+                <button onclick="clearFile(event)" class="mt-3 text-[10px] text-slate-400 hover:text-red-500 transition-colors">× Remove file</button>
+              </div>
+            </div>
+          </div>
+          <p class="text-slate-400 text-[10px] text-center mt-4">PDF only • Max 10MB</p>
+        </div>
+
+        <!-- CARD 2: Interview Duration -->
+        <div class="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-sm flex flex-col justify-between">
+          <div class="space-y-4">
+            <h3 class="font-bold text-slate-800 text-base mb-0">Interview Duration</h3>
+            <div class="grid grid-cols-4 gap-2">
+              <button class="timer-pill active rounded-xl py-2 flex flex-col items-center justify-center" onclick="setTimer(5, this)">
+                <span class="pill-num text-lg font-bold text-slate-800">5</span>
+                <span class="pill-unit text-[10px] text-slate-400 font-medium">min</span>
+              </button>
+              <button class="timer-pill rounded-xl py-2 flex flex-col items-center justify-center" onclick="setTimer(10, this)">
+                <span class="pill-num text-lg font-bold text-slate-800">10</span>
+                <span class="pill-unit text-[10px] text-slate-400 font-medium">min</span>
+              </button>
+              <button class="timer-pill rounded-xl py-2 flex flex-col items-center justify-center" onclick="setTimer(15, this)">
+                <span class="pill-num text-lg font-bold text-slate-800">15</span>
+                <span class="pill-unit text-[10px] text-slate-400 font-medium">min</span>
+              </button>
+              <button class="timer-pill rounded-xl py-2 flex flex-col items-center justify-center" onclick="setTimer(20, this)">
+                <span class="pill-num text-lg font-bold text-slate-800">20</span>
+                <span class="pill-unit text-[10px] text-slate-400 font-medium">min</span>
+              </button>
+            </div>
+            <p class="text-slate-400 text-[11px] flex items-center gap-1">
+              ⏱ Recommended: 15–20 minutes
+            </p>
+          </div>
+
+          <div class="space-y-2 mt-6">
+            <button
+              id="start-btn"
+              onclick="startInterview()"
+              class="w-full py-3.5 bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-bold rounded-xl shadow-lg shadow-indigo-100 flex items-center justify-center gap-2 hover:opacity-95 active:scale-[0.98] transition-all text-sm"
+            >
+              <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+              </svg>
+              <span id="start-btn-text">Start Interview</span>
+            </button>
+            <p class="text-slate-400 text-[10px] text-center">Press Enter to start</p>
+          </div>
+
+          <div id="start-error" class="hidden text-red-500 text-xs text-center border border-red-100 bg-red-50/50 rounded-xl py-2 px-3 mt-3"></div>
+          <span id="timer-display" class="hidden">5 minutes</span>
+        </div>
+
+        <!-- CARD 3: Camera & Mic Check -->
+        <div class="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-sm flex flex-col justify-between">
+          <div>
+            <h3 class="font-bold text-slate-800 text-base mb-4">Camera & Mic Check</h3>
+            
+            <div class="relative bg-slate-50 border border-slate-100 rounded-xl min-h-[190px] flex items-center justify-center overflow-hidden">
+              <video id="cam-preview" autoplay muted playsinline class="w-full h-full object-cover hidden rounded-xl"></video>
+              
+              <div id="cam-placeholder" class="flex flex-col items-center justify-center p-4 text-center">
+                <div class="w-14 h-14 rounded-full bg-indigo-50/80 flex items-center justify-center text-indigo-500 mb-3 shadow-inner">
+                  <!-- camera icon -->
+                  <svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                  </svg>
+                </div>
+                <p class="text-slate-800 font-bold text-xs mb-1">Camera not enabled</p>
+                <p class="text-slate-400 text-[10px] max-w-[180px]">Enable your camera and mic to start the interview.</p>
+              </div>
+
+              <!-- Mic active overlay -->
+              <div id="mic-indicator" class="hidden absolute bottom-3 right-3 flex items-center gap-1 bg-black/45 px-2 py-1 rounded-md backdrop-blur-sm">
+                <div class="wave-bar h-2.5" style="animation-delay:0s"></div>
+                <div class="wave-bar h-4" style="animation-delay:0.15s"></div>
+                <div class="wave-bar h-3" style="animation-delay:0.3s"></div>
+                <div class="wave-bar h-5" style="animation-delay:0.45s"></div>
+                <div class="wave-bar h-2.5" style="animation-delay:0.6s"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-2 mt-4">
+            <button onclick="toggleCamera()" id="cam-btn" class="flex items-center justify-center gap-1.5 bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 font-semibold py-2.5 px-3 rounded-xl text-xs transition-all">
+              📹 Enable Camera
+            </button>
+            <button onclick="toggleMic()" id="mic-btn" class="flex items-center justify-center gap-1.5 bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 font-semibold py-2.5 px-3 rounded-xl text-xs transition-all">
+              🎙️ Enable Mic
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Past Interviews Section -->
+      {% if interviews %}
+      <div class="mt-12 space-y-4 fade-in" style="animation-delay:0.15s">
+        <h3 class="font-extrabold text-slate-800 text-lg ml-1">Your Mock Interview History</h3>
+        
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {% for session in interviews %}
+          <div class="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all flex flex-col justify-between min-h-[140px]">
+            <div>
+              <div class="flex justify-between items-start mb-2">
+                <span class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Session: {{ session.id[:8] }}</span>
+                <span class="text-xs px-2.5 py-1 rounded-full font-bold {% if session.overall_score >= 75 %}bg-emerald-50 text-emerald-600 border border-emerald-100{% elif session.overall_score >= 55 %}bg-amber-50 text-amber-600 border border-amber-100{% else %}bg-red-50 text-red-500 border border-red-100{% endif %}">
+                  Score: {{ session.overall_score }}
+                </span>
+              </div>
+              <h4 class="font-extrabold text-slate-800 text-sm mb-1">{{ session.overall_label }}</h4>
+              <p class="text-slate-400 text-[10px] font-medium mb-4">Duration: {{ (session.duration_seconds / 60) | int }} mins</p>
+            </div>
+            
+            <div class="flex items-center justify-between border-t border-slate-100 pt-3">
+              <span class="text-[10px] text-slate-400 font-bold" id="time-{{ session.id }}"></span>
+              <a href="/results/{{ session.id }}" class="text-xs font-bold text-indigo-600 hover:text-indigo-900 hover:underline">View Analytics →</a>
+            </div>
+            
+            <script>
+              (function() {
+                const ts = {{ session.timestamp }};
+                if (ts > 0) {
+                  const date = new Date(ts * 1000);
+                  document.getElementById("time-{{ session.id }}").textContent = date.toLocaleDateString(undefined, {month: 'short', day: 'numeric', year: 'numeric'});
+                } else {
+                  document.getElementById("time-{{ session.id }}").textContent = "N/A";
+                }
+              })();
+            </script>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Privacy Notice Footer -->
+      <div class="text-center py-10 fade-in" style="animation-delay:0.2s">
+        <p class="text-slate-400 text-xs flex items-center justify-center gap-1.5">
+          🛡 Your data is secure and private. We don't store your interview sessions.
+        </p>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- ===================== INTERVIEW PANEL ===================== -->
+  <div id="interview-panel" class="hidden fixed inset-0 z-50 bg-mesh flex flex-col" style="background:#f8fafc;">
+
+    <!-- Top HUD -->
+    <div class="bg-white border-b border-slate-200/80 px-6 py-3.5 flex items-center justify-between shadow-sm">
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 rounded-lg bg-indigo-50 border border-indigo-200 flex items-center justify-center text-sm font-bold shadow-sm">🤖</div>
+        <span class="font-bold text-slate-800 text-sm">Live Interview Session</span>
+        <span id="session-status" class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-200/60 font-bold badge-pulse">● LIVE</span>
+      </div>
+      <div class="flex items-center gap-6">
+        <!-- Countdown ring -->
+        <div class="flex items-center gap-3">
+          <svg class="ring-svg" width="44" height="44" viewBox="0 0 48 48">
+            <circle cx="24" cy="24" r="20" fill="none" stroke="#f1f5f9" stroke-width="3"/>
+            <circle id="ring-circle" cx="24" cy="24" r="20" fill="none" stroke="url(#ringGrad)" stroke-width="3"
+              stroke-dasharray="125.6" stroke-dashoffset="0" stroke-linecap="round" class="ring-progress"/>
+            <defs>
+              <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stop-color="#6366f1"/>
+                <stop offset="100%" stop-color="#4f46e5"/>
+              </linearGradient>
+            </defs>
+          </svg>
+          <div class="text-right">
+            <p id="timer-remaining" class="text-base font-extrabold font-mono text-indigo-600">--:--</p>
+            <p class="text-[10px] text-slate-400 font-medium">remaining</p>
+          </div>
+        </div>
+        <button onclick="endInterviewManually()" class="bg-white border border-slate-200 text-slate-600 hover:text-red-500 hover:bg-red-50/50 hover:border-red-200 px-4 py-2 rounded-xl text-xs font-bold transition-all">
+          End Interview
+        </button>
+      </div>
+    </div>
+
+    <!-- Main interview area -->
+    <div class="flex-1 flex gap-0 overflow-hidden">
+
+      <!-- Chat Column -->
+      <div class="flex-1 flex flex-col p-6 gap-4">
+
+        <!-- Transcript -->
+        <div id="transcript" class="flex-1 transcript-box overflow-y-auto space-y-4 pr-2">
+          <!-- Messages injected here -->
+        </div>
+
+        <!-- AI Speaking Indicator -->
+        <div id="ai-speaking" class="hidden bg-indigo-50/70 border border-indigo-100 rounded-2xl px-5 py-3.5 flex items-center gap-4 shadow-sm">
+          <div class="relative flex-shrink-0">
+            <div class="w-10 h-10 rounded-full bg-indigo-50 border border-indigo-200 flex items-center justify-center text-lg font-bold">🤖</div>
+            <span class="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-emerald-500 border-2 border-white badge-pulse"></span>
+          </div>
+          <div class="flex items-end gap-1 h-8">
+            <div class="wave-bar" style="height:12px;animation-delay:0s"></div>
+            <div class="wave-bar" style="height:20px;animation-delay:0.1s"></div>
+            <div class="wave-bar" style="height:16px;animation-delay:0.2s"></div>
+            <div class="wave-bar" style="height:24px;animation-delay:0.3s"></div>
+            <div class="wave-bar" style="height:14px;animation-delay:0.4s"></div>
+            <div class="wave-bar" style="height:22px;animation-delay:0.5s"></div>
+            <div class="wave-bar" style="height:18px;animation-delay:0.6s"></div>
+          </div>
+          <span class="text-slate-500 text-xs font-semibold">AI interviewer is speaking…</span>
+        </div>
+
+        <!-- Input Area -->
+        <div class="bg-white border border-slate-200/80 rounded-2xl p-4 shadow-sm">
+          <div class="flex items-end gap-3">
+            <div class="flex-1">
+              <textarea
+                id="candidate-input"
+                rows="3"
+                placeholder="Type your answer here… or use 🎙️ to speak"
+                class="w-full bg-transparent text-slate-800 placeholder-slate-400 text-sm md:text-base resize-none focus:outline-none leading-relaxed"
+                onkeydown="handleInputKeydown(event)"
+              ></textarea>
+            </div>
+            <div class="flex flex-col gap-2">
+              <button id="mic-record-btn" onclick="toggleSpeechInput()" title="Voice input"
+                class="w-10 h-10 rounded-xl bg-slate-50 border border-slate-200 text-slate-500 hover:bg-slate-100 hover:text-slate-700 transition-all flex items-center justify-center text-lg">
+                🎙️
+              </button>
+              <button onclick="sendMessage()" title="Send answer"
+                class="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center text-lg hover:bg-indigo-700 shadow-md shadow-indigo-100 transition-all">
+                ➤
+              </button>
+            </div>
+          </div>
+          <div class="flex items-center justify-between mt-2 text-[10px] text-slate-400">
+            <span>Press <kbd class="px-1.5 py-0.5 rounded bg-slate-100 text-slate-500 font-bold border border-slate-200">Ctrl+Enter</kbd> to send</span>
+            <span id="word-counter" class="font-bold">0 words</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: Camera + Stats -->
+      <div class="w-80 border-l border-slate-200/80 p-5 flex flex-col gap-5 bg-white shadow-sm">
+        <!-- Camera -->
+        <div class="rounded-2xl overflow-hidden bg-slate-100 border border-slate-200/50 relative shadow-inner" style="aspect-ratio:4/3">
+          <video id="interview-cam" autoplay muted playsinline class="w-full h-full object-cover"></video>
+          <div class="absolute bottom-2 left-2 right-2 flex items-center justify-between">
+            <span class="text-[10px] bg-black/60 px-2.5 py-1 rounded-full text-white font-bold backdrop-blur-sm">You</span>
+            <div id="interview-mic-indicator" class="hidden flex gap-0.5 items-end bg-black/30 px-1.5 py-1 rounded-md">
+              <div class="wave-bar h-2" style="animation-delay:0s"></div>
+              <div class="wave-bar h-4" style="animation-delay:0.1s"></div>
+              <div class="wave-bar h-3" style="animation-delay:0.2s"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Live Stats -->
+        <div class="space-y-4">
+          <h3 class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Live Stats</h3>
+
+          <div class="bg-slate-50/80 border border-slate-200/60 rounded-xl p-4 space-y-2 shadow-inner">
+            <div class="flex justify-between text-xs font-semibold">
+              <span class="text-slate-500">Turn</span>
+              <span id="stat-turn" class="text-indigo-600 font-mono font-bold">0</span>
+            </div>
+            <div class="flex justify-between text-xs font-semibold">
+              <span class="text-slate-500">Words spoken</span>
+              <span id="stat-words" class="text-violet-600 font-mono font-bold">0</span>
+            </div>
+            <div class="flex justify-between text-xs font-semibold">
+              <span class="text-slate-500">Elapsed</span>
+              <span id="stat-elapsed" class="text-emerald-600 font-mono font-bold">0:00</span>
+            </div>
+          </div>
+
+          <!-- Progress bar -->
+          <div>
+            <div class="flex justify-between text-[10px] font-bold text-slate-400 mb-1.5">
+              <span>Time used</span>
+              <span id="stat-progress-pct" class="text-indigo-600">0%</span>
+            </div>
+            <div class="h-1.5 rounded-full bg-slate-100 overflow-hidden">
+              <div id="time-progress-bar" class="h-full rounded-full bg-gradient-to-r from-indigo-500 to-violet-500 progress-fill" style="width:0%"></div>
+            </div>
+          </div>
+
+          <div class="bg-indigo-50/50 border border-indigo-100 text-slate-500 rounded-xl p-3.5 text-xs leading-relaxed flex gap-2">
+            <span>💡</span>
+            <div>
+              <span class="text-slate-700 font-bold">Tip:</span> Speak clearly and reference specific projects from your resume for higher scores.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== JAVASCRIPT ===================== -->
+  <script>
+    // ---- State ----
+    let selectedDuration = 5;
+    let selectedFile = null;
+    let ws = null;
+    let sessionId = null;
+    let speechRecognition = null;
+    let isRecording = false;
+    let totalWordsSpoken = 0;
+    let turnCount = 0;
+    let sessionStartTime = null;
+    let mediaStream = null;
+    let camEnabled = false;
+    let micEnabled = false;
+    let timerInterval = null;
+    let sessionDurationSecs = 0;
+
+    // ---- Particles ----
+    (function spawnParticles() {
+      const container = document.getElementById('particles');
+      for (let i = 0; i < 18; i++) {
+        const p = document.createElement('div');
+        p.className = 'particle';
+        const size = Math.random() * 4 + 2;
+        p.style.cssText = `
+          width:${size}px; height:${size}px;
+          left:${Math.random()*100}%;
+          background: ${Math.random()>0.5 ? 'rgba(99,102,241,0.25)' : 'rgba(6,182,212,0.18)'};
+          animation-duration: ${Math.random()*20+15}s;
+          animation-delay: ${Math.random()*15}s;
+        `;
+        container.appendChild(p);
+      }
+    })();
+
+    // ---- Drop Zone ----
+    const dropZone = document.getElementById('drop-zone');
+    dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+    dropZone.addEventListener('drop', e => {
+      e.preventDefault();
+      dropZone.classList.remove('drag-over');
+      const file = e.dataTransfer.files[0];
+      if (file) applyFile(file);
+    });
+
+    function handleFileSelect(input) {
+      if (input.files[0]) applyFile(input.files[0]);
+    }
+
+    function applyFile(file) {
+      if (!file.name.toLowerCase().endsWith('.pdf')) {
+        showError('Only PDF files are accepted. Please upload a PDF resume.');
+        return;
+      }
+      if (file.size > 10 * 1024 * 1024) {
+        showError('File exceeds 10MB limit.');
+        return;
+      }
+      selectedFile = file;
+      dropZone.classList.add('file-loaded');
+      document.getElementById('drop-content').classList.add('hidden');
+      document.getElementById('file-info').classList.remove('hidden');
+      document.getElementById('file-name').textContent = file.name;
+      document.getElementById('file-size').textContent = `${(file.size / 1024).toFixed(1)} KB`;
+      hideError();
+    }
+
+    function clearFile(e) {
+      e.stopPropagation();
+      selectedFile = null;
+      dropZone.classList.remove('file-loaded');
+      document.getElementById('drop-content').classList.remove('hidden');
+      document.getElementById('file-info').classList.add('hidden');
+      document.getElementById('resume-input').value = '';
+    }
+
+    // ---- Timer Selector ----
+    function setTimer(mins, btn) {
+      selectedDuration = mins;
+      document.querySelectorAll('.timer-pill').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('timer-display').textContent = `${mins} minutes`;
+    }
+
+    // ---- Camera & Mic ----
+    async function toggleCamera() {
+      if (!camEnabled) {
+        try {
+          mediaStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: micEnabled });
+          document.getElementById('cam-preview').srcObject = mediaStream;
+          document.getElementById('cam-preview').classList.remove('hidden');
+          document.getElementById('cam-placeholder').classList.add('hidden');
+          document.getElementById('cam-btn').textContent = '📷 Disable Camera';
+          document.getElementById('cam-btn').classList.add('bg-indigo-50', 'text-indigo-600', 'border-indigo-200');
+          camEnabled = true;
+        } catch (e) { console.warn('Camera access denied:', e); }
+      } else {
+        if (mediaStream) mediaStream.getVideoTracks().forEach(t => t.stop());
+        document.getElementById('cam-preview').srcObject = null;
+        document.getElementById('cam-preview').classList.add('hidden');
+        document.getElementById('cam-placeholder').classList.remove('hidden');
+        document.getElementById('cam-btn').textContent = '📹 Enable Camera';
+        document.getElementById('cam-btn').classList.remove('bg-indigo-50', 'text-indigo-600', 'border-indigo-200');
+        camEnabled = false;
+      }
+    }
+
+    async function toggleMic() {
+      if (!micEnabled) {
+        try {
+          const s = await navigator.mediaDevices.getUserMedia({ audio: true });
+          document.getElementById('mic-indicator').classList.remove('hidden');
+          document.getElementById('mic-btn').textContent = '🎙️ Disable Mic';
+          document.getElementById('mic-btn').classList.add('bg-indigo-50', 'text-indigo-600', 'border-indigo-200');
+          micEnabled = true;
+        } catch (e) { console.warn('Mic access denied:', e); }
+      } else {
+        document.getElementById('mic-indicator').classList.add('hidden');
+        document.getElementById('mic-btn').textContent = '🎙️ Enable Mic';
+        document.getElementById('mic-btn').classList.remove('bg-indigo-50', 'text-indigo-600', 'border-indigo-200');
+        micEnabled = false;
+      }
+    }
+
+    // ---- Start Interview ----
+    async function startInterview() {
+      if (!selectedFile) { showError('Please upload your PDF resume first.'); return; }
+
+      const btn = document.getElementById('start-btn');
+      document.getElementById('start-btn-text').textContent = 'Starting Session…';
+      btn.disabled = true;
+      btn.classList.add('opacity-70', 'cursor-not-allowed');
+
+      try {
+        const formData = new FormData();
+        formData.append('resume', selectedFile);
+        formData.append('duration', selectedDuration);
+
+        const resp = await fetch('/start', { method: 'POST', body: formData });
+        if (!resp.ok) {
+          const err = await resp.json();
+          throw new Error(err.detail || 'Server error');
+        }
+        const data = await resp.json();
+        sessionId = data.session_id;
+        sessionDurationSecs = selectedDuration * 60;
+
+        // Transfer camera stream to interview panel
+        const interviewCam = document.getElementById('interview-cam');
+        if (mediaStream) interviewCam.srcObject = mediaStream;
+
+        // Show interview panel
+        document.getElementById('landing-page').classList.add('hidden');
+        document.getElementById('interview-panel').classList.remove('hidden');
+
+        // Connect WebSocket
+        connectWebSocket(sessionId);
+
+      } catch (e) {
+        showError(`Failed to start: ${e.message}`);
+        document.getElementById('start-btn-text').textContent = 'Start Interview';
+        btn.disabled = false;
+        btn.classList.remove('opacity-70', 'cursor-not-allowed');
+      }
+    }
+
+    // ---- WebSocket ----
+    let localTimerInterval = null;
+
+    function connectWebSocket(id) {
+      const proto = location.protocol === 'https:' ? 'wss' : 'ws';
+      ws = new WebSocket(`${proto}://${location.host}/ws/${id}`);
+      sessionStartTime = Date.now();
+
+      ws.onopen = () => {
+        console.log('[WS] Connected to interview session.');
+        if (localTimerInterval) clearInterval(localTimerInterval);
+        localTimerInterval = setInterval(() => {
+          if (!sessionStartTime) return;
+          const elapsedSecs = Math.floor((Date.now() - sessionStartTime) / 1000);
+          const remainingSecs = Math.max(0, sessionDurationSecs - elapsedSecs);
+          updateTimerHUD(remainingSecs, elapsedSecs, sessionDurationSecs);
+        }, 1000);
+      };
+
+      ws.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+
+        if (data.type === 'ai_message') {
+          appendMessage('ai', data.text, data.turn);
+          document.getElementById('ai-speaking').classList.remove('hidden');
+          speakText(data.text, () => document.getElementById('ai-speaking').classList.add('hidden'));
+          document.getElementById('stat-turn').textContent = data.turn || turnCount;
+        }
+
+        if (data.type === 'timer') {
+          if (data.duration) sessionDurationSecs = data.duration;
+        }
+
+        if (data.type === 'time_up') {
+          endSession();
+        }
+
+        if (data.type === 'session_complete') {
+          window.location.href = `/results/${data.session_id}`;
+        }
+
+        if (data.type === 'error') {
+          const msg = data.message || '';
+          if (msg.toLowerCase().includes('api key') || msg.toLowerCase().includes('invalid_argument') || msg.toLowerCase().includes('api_key_invalid')) {
+            appendMessage('system', '❌ Invalid API Key. Please configure a valid key in your server environment.');
+            showInvalidKeyBanner();
+          } else {
+            appendMessage('system', '⚠️ ' + msg);
+          }
+        }
+      };
+
+      ws.onclose = () => console.log('[WS] Connection closed.');
+      ws.onerror = (e) => console.error('[WS] Error:', e);
+    }
+
+    // ---- Timer HUD ----
+    function updateTimerHUD(remaining, elapsed, total) {
+      const mins = Math.floor(remaining / 60);
+      const secs = remaining % 60;
+      document.getElementById('timer-remaining').textContent =
+        `${String(mins).padStart(2,'0')}:${String(secs).padStart(2,'0')}`;
+
+      const pct = Math.min((elapsed / total) * 100, 100);
+      document.getElementById('time-progress-bar').style.width = `${pct}%`;
+      document.getElementById('stat-progress-pct').textContent = `${Math.round(pct)}%`;
+
+      // Ring
+      const circumference = 125.6;
+      const offset = circumference * (elapsed / total);
+      document.getElementById('ring-circle').style.strokeDashoffset = offset;
+
+      // Elapsed display
+      const em = Math.floor(elapsed / 60);
+      const es = elapsed % 60;
+      document.getElementById('stat-elapsed').textContent =
+        `${em}:${String(es).padStart(2,'0')}`;
+
+      // Danger color at 80%
+      if (pct > 80) {
+        document.getElementById('timer-remaining').classList.replace('text-indigo-600', 'text-red-600');
+      }
+    }
+
+    // ---- Append Message ----
+    function appendMessage(role, text, turn) {
+      const transcript = document.getElementById('transcript');
+      const div = document.createElement('div');
+
+      if (role === 'ai') {
+        div.className = 'flex gap-4 fade-in';
+        div.innerHTML = `
+          <div class="flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-500 text-white flex items-center justify-center text-sm font-bold shadow-sm">🤖</div>
+          <div class="bg-indigo-50/70 border border-indigo-100 rounded-2xl rounded-tl-none px-5 py-4 max-w-3xl text-slate-800 shadow-sm">
+            ${turn ? `<p class="text-[10px] text-indigo-600 mb-2 font-bold tracking-wide uppercase">Question ${turn}</p>` : ''}
+            <p class="text-slate-800 text-sm md:text-base leading-relaxed">${escapeHtml(text)}</p>
+          </div>`;
+      } else if (role === 'candidate') {
+        div.className = 'flex gap-4 justify-end fade-in';
+        div.innerHTML = `
+          <div class="bg-slate-50 border border-slate-200/60 rounded-2xl rounded-tr-none px-5 py-4 max-w-3xl text-slate-800 shadow-sm">
+            <p class="text-[10px] text-slate-500 mb-2 font-bold tracking-wide uppercase">Your Answer</p>
+            <p class="text-slate-800 text-sm md:text-base leading-relaxed">${escapeHtml(text)}</p>
+          </div>
+          <div class="flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-slate-200 to-slate-300 text-slate-600 border border-slate-300/30 flex items-center justify-center text-sm font-bold shadow-sm">You</div>`;
+      } else {
+        div.className = 'text-center text-xs text-slate-400 py-2';
+        div.textContent = text;
+      }
+
+      transcript.appendChild(div);
+      transcript.scrollTop = transcript.scrollHeight;
+    }
+
+    // ---- Send Message ----
+    function sendMessage() {
+      const input = document.getElementById('candidate-input');
+      const text = input.value.trim();
+      if (!text || !ws || ws.readyState !== WebSocket.OPEN) return;
+
+      appendMessage('candidate', text);
+      totalWordsSpoken += text.split(/\s+/).length;
+      document.getElementById('stat-words').textContent = totalWordsSpoken;
+      turnCount++;
+
+      ws.send(JSON.stringify({ type: 'candidate_message', text }));
+      input.value = '';
+      document.getElementById('word-counter').textContent = '0 words';
+    }
+
+    function handleInputKeydown(e) {
+      if (e.ctrlKey && e.key === 'Enter') sendMessage();
+      const words = e.target.value.trim().split(/\s+/).filter(Boolean).length;
+      document.getElementById('word-counter').textContent = `${words} word${words !== 1 ? 's' : ''}`;
+    }
+
+    // ---- Speech Input (SpeechRecognition API) ----
+    function toggleSpeechInput() {
+      if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
+        alert('Speech recognition is not supported in this browser. Please use Chrome.');
+        return;
+      }
+      if (isRecording) {
+        speechRecognition.stop();
+        isRecording = false;
+        document.getElementById('mic-record-btn').style.background = '';
+        document.getElementById('interview-mic-indicator').classList.add('hidden');
+        return;
+      }
+      const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+      speechRecognition = new SR();
+      speechRecognition.continuous = true;
+      speechRecognition.interimResults = true;
+      speechRecognition.lang = 'en-US';
+
+      speechRecognition.onstart = () => {
+        isRecording = true;
+        document.getElementById('mic-record-btn').style.background = '#fee2e2';
+        document.getElementById('mic-record-btn').style.color = '#ef4444';
+        document.getElementById('interview-mic-indicator').classList.remove('hidden');
+      };
+      speechRecognition.onresult = (e) => {
+        let final = '';
+        for (let i = e.resultIndex; i < e.results.length; i++) {
+          if (e.results[i].isFinal) final += e.results[i][0].transcript;
+        }
+        if (final) {
+          const inp = document.getElementById('candidate-input');
+          inp.value = (inp.value + ' ' + final).trim();
+          const words = inp.value.trim().split(/\s+/).filter(Boolean).length;
+          document.getElementById('word-counter').textContent = `${words} word${words!==1?'s':''}`;
+        }
+      };
+      speechRecognition.onerror = (e) => console.warn('[Speech] Error:', e.error);
+      speechRecognition.onend = () => {
+        isRecording = false;
+        document.getElementById('mic-record-btn').style.background = '';
+        document.getElementById('mic-record-btn').style.color = '';
+        document.getElementById('interview-mic-indicator').classList.add('hidden');
+      };
+      speechRecognition.start();
+    }
+
+    // ---- Text-to-Speech ----
+    function speakText(text, onEnd) {
+      if (!window.speechSynthesis) { if (onEnd) onEnd(); return; }
+      window.speechSynthesis.cancel();
+      const utt = new SpeechSynthesisUtterance(text);
+      utt.rate = 0.95;
+      utt.pitch = 1;
+      utt.volume = 1;
+      const voices = window.speechSynthesis.getVoices();
+      const preferred = voices.find(v => v.name.includes('Google') && v.lang === 'en-US')
+        || voices.find(v => v.lang === 'en-US') || voices[0];
+      if (preferred) utt.voice = preferred;
+      utt.onend = onEnd;
+      window.speechSynthesis.speak(utt);
+    }
+
+    // ---- End Session ----
+    function endSession() {
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({ type: 'end_interview' }));
+      }
+      appendMessage('system', '⏰ Interview session ended. Compiling your results…');
+    }
+
+    function endInterviewManually() {
+      if (!confirm('Are you sure you want to end the interview early?')) return;
+      endSession();
+    }
+
+    // ---- Helpers ----
+    function escapeHtml(str) {
+      return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
+    }
+
+    function showError(msg) {
+      const el = document.getElementById('start-error');
+      el.textContent = msg;
+      el.classList.remove('hidden');
+    }
+    function hideError() { document.getElementById('start-error').classList.add('hidden'); }
+
+    // ---- Invalid API Key banner inside interview panel ----
+    function showInvalidKeyBanner() {
+      const existing = document.getElementById('invalid-key-banner');
+      if (existing) return;
+      const banner = document.createElement('div');
+      banner.id = 'invalid-key-banner';
+      banner.className = 'fixed top-16 left-1/2 -translate-x-1/2 z-50 bg-white rounded-2xl px-6 py-4 border border-red-200 text-center shadow-2xl';
+      banner.innerHTML = `
+        <p class="text-red-500 font-bold mb-1">Configuration Error</p>
+        <p class="text-slate-500 text-xs mb-3">Your API key is not valid. Please configure a valid key in your server environment.</p>
+        <div class="flex gap-3 justify-center">
+          <button onclick="goBackToConfig()"
+            class="px-4 py-2 rounded-xl text-xs font-semibold bg-indigo-50 border border-indigo-200 text-indigo-600 hover:bg-indigo-100 transition-all">
+            Go Back & Fix
+          </button>
+        </div>`;
+      document.body.appendChild(banner);
+    }
+
+    function goBackToConfig() {
+      document.getElementById('interview-panel').classList.add('hidden');
+      document.getElementById('landing-page').classList.remove('hidden');
+      const banner = document.getElementById('invalid-key-banner');
+      if (banner) banner.remove();
+      const btn = document.getElementById('start-btn');
+      btn.disabled = false;
+      btn.classList.remove('opacity-70', 'cursor-not-allowed');
+      document.getElementById('start-btn-text').textContent = 'Start Interview';
+    }
+
+    // Preload speech voices
+    window.speechSynthesis && window.speechSynthesis.getVoices();
+  </script>
+</body>
+</html>

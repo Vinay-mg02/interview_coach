@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Welcome | AI Mock Interview Coach</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    * { font-family: 'Inter', sans-serif; }
+    body { background: #f8fafc; color: #1e293b; overflow-x: hidden; }
+
+    /* Animated light mesh background */
+    .bg-mesh {
+      background:
+        radial-gradient(circle at 10% 20%, rgba(99, 102, 241, 0.05) 0%, transparent 40%),
+        radial-gradient(circle at 90% 80%, rgba(6, 182, 212, 0.04) 0%, transparent 40%),
+        #f8fafc;
+    }
+
+    /* Premium 3D Neumorphic / Claymorphic Card */
+    .auth-card {
+      background: #ffffff;
+      border-top: 1.5px solid rgba(255, 255, 255, 0.8);
+      border-left: 1.5px solid rgba(255, 255, 255, 0.5);
+      border-right: 1.5px solid rgba(0, 0, 0, 0.03);
+      border-bottom: 2px solid rgba(0, 0, 0, 0.08);
+      border-radius: 28px;
+      box-shadow: 
+        0 20px 40px -15px rgba(0, 0, 0, 0.05),
+        0 1px 3px rgba(0, 0, 0, 0.02),
+        inset 0 -6px 12px rgba(0, 0, 0, 0.01);
+    }
+
+    /* 3D Button styling */
+    .btn-3d {
+      background: linear-gradient(135deg, #6366f1, #4f46e5);
+      border-top: 1px solid rgba(255, 255, 255, 0.2);
+      border-left: 1px solid rgba(255, 255, 255, 0.1);
+      border-right: 1.5px solid rgba(0, 0, 0, 0.2);
+      border-bottom: 1.5px solid rgba(0, 0, 0, 0.3);
+      box-shadow: 
+        0 5px 0 #312e81,
+        0 10px 20px rgba(99, 102, 241, 0.2),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+      transition: all 0.1s ease;
+      transform: translateY(0);
+    }
+    .btn-3d:hover {
+      transform: translateY(-1px);
+      box-shadow: 
+        0 6px 0 #312e81,
+        0 12px 24px rgba(99, 102, 241, 0.25);
+    }
+    .btn-3d:active {
+      transform: translateY(3px);
+      box-shadow: 
+        0 2px 0 #312e81,
+        0 4px 8px rgba(99, 102, 241, 0.15);
+    }
+
+    /* Neumorphic Input Box */
+    .input-3d {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      box-shadow: 
+        inset 0 2px 4px rgba(0, 0, 0, 0.03),
+        0 1px 1px rgba(255, 255, 255, 0.8);
+      transition: all 0.25s ease;
+    }
+    .input-3d:focus {
+      border-color: #6366f1;
+      background: #ffffff;
+      box-shadow: 
+        0 0 0 3px rgba(99, 102, 241, 0.15),
+        inset 0 1px 2px rgba(0, 0, 0, 0.02);
+      outline: none;
+    }
+
+    /* Particles */
+    .particle {
+      position: fixed;
+      border-radius: 50%;
+      pointer-events: none;
+      animation: float-up linear infinite;
+    }
+    @keyframes float-up {
+      0% { transform: translateY(100vh) scale(0); opacity: 0; }
+      10% { opacity: 0.2; }
+      90% { opacity: 0.05; }
+      100% { transform: translateY(-20vh) scale(1); opacity: 0; }
+    }
+  </style>
+</head>
+<body class="bg-mesh min-h-screen flex flex-col justify-between">
+
+  <!-- Particles -->
+  <div id="particles" class="fixed inset-0 pointer-events-none z-0"></div>
+
+  <!-- Header -->
+  <header class="relative z-10 px-8 py-5">
+    <div class="flex items-center gap-3">
+      <div class="w-11 h-11 rounded-2xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-2xl shadow-sm">🤖</div>
+      <div>
+        <h1 class="text-lg font-extrabold text-slate-800 tracking-tight leading-none">InterviewBot</h1>
+        <span class="text-xs text-slate-400 font-medium">AI Interviewer</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Auth Card Area -->
+  <main class="relative z-10 flex-1 flex items-center justify-center px-4 py-8">
+    <div class="auth-card w-full max-w-md p-8 md:p-10 relative overflow-hidden transition-all duration-300">
+      
+      <!-- Logo Section -->
+      <div class="text-center mb-8">
+        <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-indigo-50 border border-indigo-100 text-3xl shadow-sm mb-4">💬</div>
+        <h2 id="card-title" class="text-2xl font-extrabold text-slate-800 tracking-tight">Sign In</h2>
+        <p id="card-desc" class="text-slate-400 text-xs mt-1">Please sign in to configure your mock interview</p>
+      </div>
+
+      <!-- Tab Switcher -->
+      <div class="flex bg-slate-50 border border-slate-200/80 rounded-2xl p-1.5 mb-6">
+        <button id="tab-login" onclick="switchTab('login')" class="flex-1 py-2 text-xs font-bold rounded-xl text-indigo-600 bg-white shadow-sm transition-all">
+          Login
+        </button>
+        <button id="tab-register" onclick="switchTab('register')" class="flex-1 py-2 text-xs font-bold rounded-xl text-slate-500 hover:text-slate-700 transition-all">
+          Register
+        </button>
+      </div>
+
+      <!-- Form -->
+      <form id="auth-form" onsubmit="handleSubmit(event)" class="space-y-4">
+        <div>
+          <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1" for="username">Username</label>
+          <input
+            id="username"
+            type="text"
+            required
+            placeholder="Type your username..."
+            class="input-3d w-full px-4 py-3 rounded-xl text-sm text-slate-850 font-medium placeholder-slate-400"
+          />
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1" for="password">Password</label>
+          <input
+            id="password"
+            type="password"
+            required
+            placeholder="Type your password..."
+            class="input-3d w-full px-4 py-3 rounded-xl text-sm text-slate-850 font-medium placeholder-slate-400"
+          />
+        </div>
+
+        <button
+          type="submit"
+          class="btn-3d w-full py-3.5 mt-2 text-white font-bold rounded-xl flex items-center justify-center gap-2 hover:opacity-98 transition-all text-sm uppercase tracking-wider"
+        >
+          <span id="submit-text">Sign In</span>
+        </button>
+      </form>
+
+      <!-- Status Alert -->
+      <div id="auth-alert" class="hidden text-xs text-center rounded-xl py-3 px-4 border mt-4"></div>
+
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="relative z-10 text-center py-6">
+    <p class="text-slate-400 text-xs">
+      🛡 Your data is secure and private. We don't store your credentials.
+    </p>
+  </footer>
+
+  <script>
+    let activeTab = 'login';
+
+    // ---- Particles ----
+    (function spawnParticles() {
+      const container = document.getElementById('particles');
+      for (let i = 0; i < 15; i++) {
+        const p = document.createElement('div');
+        p.className = 'particle';
+        const size = Math.random() * 4 + 2;
+        p.style.cssText = `
+          width:${size}px; height:${size}px;
+          left:${Math.random()*100}%;
+          background: ${Math.random()>0.5 ? 'rgba(99,102,241,0.2)' : 'rgba(6,182,212,0.15)'};
+          animation-duration: ${Math.random()*20+15}s;
+          animation-delay: ${Math.random()*15}s;
+        `;
+        container.appendChild(p);
+      }
+    })();
+
+    // ---- Switch Tab ----
+    function switchTab(tab) {
+      activeTab = tab;
+      const loginBtn = document.getElementById('tab-login');
+      const registerBtn = document.getElementById('tab-register');
+      const title = document.getElementById('card-title');
+      const desc = document.getElementById('card-desc');
+      const submitText = document.getElementById('submit-text');
+      const alertBox = document.getElementById('auth-alert');
+
+      alertBox.classList.add('hidden');
+
+      if (tab === 'login') {
+        loginBtn.className = 'flex-1 py-2 text-xs font-bold rounded-xl text-indigo-600 bg-white shadow-sm transition-all';
+        registerBtn.className = 'flex-1 py-2 text-xs font-bold rounded-xl text-slate-500 hover:text-slate-700 transition-all';
+        title.textContent = 'Sign In';
+        desc.textContent = 'Please sign in to configure your mock interview';
+        submitText.textContent = 'Sign In';
+      } else {
+        registerBtn.className = 'flex-1 py-2 text-xs font-bold rounded-xl text-indigo-600 bg-white shadow-sm transition-all';
+        loginBtn.className = 'flex-1 py-2 text-xs font-bold rounded-xl text-slate-500 hover:text-slate-700 transition-all';
+        title.textContent = 'Create Account';
+        desc.textContent = 'Register an account to start practicing mock interviews';
+        submitText.textContent = 'Register';
+      }
+    }
+
+    // ---- Form Submission ----
+    async function handleSubmit(e) {
+      e.preventDefault();
+      const userField = document.getElementById('username');
+      const passField = document.getElementById('password');
+      const alertBox = document.getElementById('auth-alert');
+      
+      const username = userField.value.trim();
+      const password = passField.value;
+
+      if (!username || !password) return;
+
+      alertBox.classList.add('hidden');
+
+      const url = activeTab === 'login' ? '/login' : '/register';
+      
+      try {
+        const formData = new URLSearchParams();
+        formData.append('username', username);
+        formData.append('password', password);
+
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          body: formData.toString()
+        });
+
+        const data = await response.json();
+        
+        if (response.ok) {
+          // Success
+          alertBox.className = 'text-emerald-650 border-emerald-100 bg-emerald-50 text-xs text-center rounded-xl py-3 px-4 border mt-4';
+          alertBox.textContent = data.message || 'Success! Redirecting...';
+          alertBox.classList.remove('hidden');
+          
+          setTimeout(() => {
+            window.location.href = '/';
+          }, 1000);
+        } else {
+          // Error
+          alertBox.className = 'text-red-500 border-red-100 bg-red-50 text-xs text-center rounded-xl py-3 px-4 border mt-4';
+          alertBox.textContent = data.detail || 'Authentication failed. Please try again.';
+          alertBox.classList.remove('hidden');
+        }
+      } catch (err) {
+        console.error(err);
+        alertBox.className = 'text-red-500 border-red-100 bg-red-50 text-xs text-center rounded-xl py-3 px-4 border mt-4';
+        alertBox.textContent = 'Server connection error. Please try again.';
+        alertBox.classList.remove('hidden');
+      }
+    }
+  </script>
+</body>
+</html>
